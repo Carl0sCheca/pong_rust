@@ -1,0 +1,13 @@
+[package]
+name = "pong"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bytemuck = { version="1.7.0", features=["derive"] }
+futures = "0.3.15"
+rand = "0.8.4"
+wgpu = "0.9.0"
+winit = "0.25.0"
