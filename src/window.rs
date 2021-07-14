@@ -57,7 +57,11 @@ impl Window {
                                 },
                             ..
                         } => {
-                            if let (winit::event::VirtualKeyCode::Escape, winit::event::ElementState::Released) = (key, state) {
+                            if let (
+                                winit::event::VirtualKeyCode::Escape,
+                                winit::event::ElementState::Released,
+                            ) = (key, state)
+                            {
                                 *control_flow = winit::event_loop::ControlFlow::Exit;
                             }
                         }

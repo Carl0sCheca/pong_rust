@@ -188,11 +188,11 @@ impl Controller {
                     self.ball.direction.y = rand::distributions::Uniform::new(-0.05, 0.05)
                         .sample(&mut rand::thread_rng());
                 } else if bounce_direction > 55.0 {
-                    self.ball.direction.y = rand::distributions::Uniform::new(0.3, 1.0)
-                        .sample(&mut rand::thread_rng());
+                    self.ball.direction.y =
+                        rand::distributions::Uniform::new(0.3, 1.0).sample(&mut rand::thread_rng());
                 } else {
                     self.ball.direction.y = rand::distributions::Uniform::new(-1.0, -0.3)
-                    .sample(&mut rand::thread_rng());
+                        .sample(&mut rand::thread_rng());
                 }
                 self.ball.direction = self.ball.direction.normalize();
             }

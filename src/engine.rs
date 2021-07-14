@@ -214,7 +214,6 @@ impl Engine {
 
         self.controller.update(dt);
 
-
         // Update players positions
         for i in 0..=7 {
             let player = {
@@ -227,7 +226,6 @@ impl Engine {
 
             self.vertices[i].position[1] = self.controller.players[player].vertices[i % 4][1];
         }
-
 
         // Update ball position
         for i in 8..=11 {
