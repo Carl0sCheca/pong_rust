@@ -76,10 +76,10 @@ impl Window {
                     engine.update(&dt);
                     match engine.render() {
                         Ok(_) => {}
-                        Err(wgpu::SwapChainError::Lost) => {
+                        Err(wgpu::SurfaceError::Lost) => {
                             engine.resize(engine.size);
                         }
-                        Err(wgpu::SwapChainError::OutOfMemory) => {
+                        Err(wgpu::SurfaceError::OutOfMemory) => {
                             *control_flow = winit::event_loop::ControlFlow::Exit;
                         }
                         Err(e) => eprintln!("{:?}", e),
