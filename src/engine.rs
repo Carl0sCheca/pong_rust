@@ -66,7 +66,7 @@ impl Engine {
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface.get_preferred_format(&adapter).unwrap(),
+            format: surface.get_supported_formats(&adapter)[0],
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
@@ -74,7 +74,7 @@ impl Engine {
 
         surface.configure(&device, &config);
 
-        let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/default.wgsl").into()),
         });
@@ -182,11 +182,11 @@ impl Engine {
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
                 entry_point: "fs_main",
-                targets: &[wgpu::ColorTargetState {
+                targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState::REPLACE),
                     write_mask: wgpu::ColorWrites::ALL,
-                }],
+                })],
             }),
             multiview: None,
         });
@@ -250,7 +250,7 @@ impl Engine {
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass Descriptor"),
-            color_attachments: &[wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &view,
                 resolve_target: None,
                 ops: wgpu::Operations {
@@ -262,7 +262,7 @@ impl Engine {
                     }),
                     store: true,
                 },
-            }],
+            })],
             depth_stencil_attachment: None,
         });
 
