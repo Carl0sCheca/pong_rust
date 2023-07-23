@@ -41,8 +41,11 @@ impl Engine {
     pub async fn new(window: &winit::window::Window) -> Self {
         let size = window.inner_size();
 
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let instance = wgpu::Instance::default();
+
         let surface = unsafe { instance.create_surface(window) };
+        let surface = surface.unwrap();
+
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
@@ -64,13 +67,16 @@ impl Engine {
             .await
             .unwrap();
 
+        let caps = surface.get_capabilities(&adapter);
+
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface.get_supported_formats(&adapter)[0],
+            format: caps.formats[0],
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            view_formats: vec![wgpu::TextureFormat::Rgba8Unorm],
         };
 
         surface.configure(&device, &config);
