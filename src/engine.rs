@@ -76,7 +76,7 @@ impl Engine {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
-            view_formats: vec![wgpu::TextureFormat::Rgba8Unorm],
+            view_formats: vec![wgpu::TextureFormat::Bgra8Unorm],
         };
 
         surface.configure(&device, &config);
@@ -267,10 +267,12 @@ impl Engine {
                         b: 0.0,
                         a: 1.0,
                     }),
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
@@ -296,9 +298,9 @@ impl Engine {
 
     pub fn input(&mut self, event: &winit::event::WindowEvent) {
         if let winit::event::WindowEvent::KeyboardInput {
-            input:
-                winit::event::KeyboardInput {
-                    virtual_keycode: Some(key),
+            event:
+                winit::event::KeyEvent {
+                    physical_key: winit::keyboard::PhysicalKey::Code(key),
                     state,
                     ..
                 },
@@ -306,7 +308,7 @@ impl Engine {
         } = event
         {
             match (key, state) {
-                (winit::event::VirtualKeyCode::W, _) => match state {
+                (winit::keyboard::KeyCode::KeyW, _) => match state {
                     winit::event::ElementState::Pressed => {
                         self.controller.players[0].input = crate::pong::Input::Up;
                     }
@@ -314,7 +316,7 @@ impl Engine {
                         self.controller.players[0].input = crate::pong::Input::None;
                     }
                 },
-                (winit::event::VirtualKeyCode::S, _) => match state {
+                (winit::keyboard::KeyCode::KeyS, _) => match state {
                     winit::event::ElementState::Pressed => {
                         self.controller.players[0].input = crate::pong::Input::Down;
                     }
@@ -322,7 +324,7 @@ impl Engine {
                         self.controller.players[0].input = crate::pong::Input::None;
                     }
                 },
-                (winit::event::VirtualKeyCode::Up, _) => match state {
+                (winit::keyboard::KeyCode::ArrowUp, _) => match state {
                     winit::event::ElementState::Pressed => {
                         self.controller.players[1].input = crate::pong::Input::Up;
                     }
@@ -330,7 +332,7 @@ impl Engine {
                         self.controller.players[1].input = crate::pong::Input::None;
                     }
                 },
-                (winit::event::VirtualKeyCode::Down, _) => match state {
+                (winit::keyboard::KeyCode::ArrowDown, _) => match state {
                     winit::event::ElementState::Pressed => {
                         self.controller.players[1].input = crate::pong::Input::Down;
                     }

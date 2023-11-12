@@ -1,3 +1,5 @@
+use winit::platform::pump_events::EventLoopExtPumpEvents;
+
 pub struct Window {}
 
 impl Window {
@@ -6,7 +8,7 @@ impl Window {
     }
 
     pub fn run(&mut self) {
-        let mut event_loop = winit::event_loop::EventLoop::new();
+        let mut event_loop = winit::event_loop::EventLoop::new().unwrap();
         let window = winit::window::WindowBuilder::new()
             .with_title("pong")
             .with_resizable(false)
@@ -17,9 +19,8 @@ impl Window {
 
         let mut last_update = std::time::Instant::now();
 
-        winit::platform::run_return::EventLoopExtRunReturn::run_return(
-            &mut event_loop,
-            move |event, _, control_flow| match event {
+        'mainloop: loop {
+            let status = event_loop.pump_events(None, |event, event_loop| match event {
                 winit::event::Event::WindowEvent {
                     ref event,
                     window_id,
@@ -37,59 +38,64 @@ impl Window {
                                 engine.resize(*physical_size);
                             }
                         }
-                        winit::event::WindowEvent::ScaleFactorChanged {
-                            new_inner_size, ..
-                        } => {
-                            let winit::dpi::PhysicalSize { width, height, .. } = **new_inner_size;
+                        winit::event::WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                            let size = *scale_factor;
+                            let new_inner_size @ winit::dpi::PhysicalSize { width, height } =
+                                winit::dpi::PhysicalSize {
+                                    width: (engine.config.width as f64 * size) as u32,
+                                    height: (engine.config.width as f64 * size) as u32,
+                                };
                             if width > 0 && height > 0 {
-                                engine.resize(**new_inner_size);
+                                engine.resize(new_inner_size);
                             }
                         }
                         winit::event::WindowEvent::CloseRequested => {
-                            *control_flow = winit::event_loop::ControlFlow::Exit;
+                            event_loop.exit();
                         }
                         winit::event::WindowEvent::KeyboardInput {
-                            input:
-                                winit::event::KeyboardInput {
-                                    virtual_keycode: Some(key),
+                            event:
+                                winit::event::KeyEvent {
+                                    physical_key: winit::keyboard::PhysicalKey::Code(key),
                                     state,
                                     ..
                                 },
                             ..
                         } => {
                             if let (
-                                winit::event::VirtualKeyCode::Escape,
+                                winit::keyboard::KeyCode::Escape,
                                 winit::event::ElementState::Released,
                             ) = (key, state)
                             {
-                                *control_flow = winit::event_loop::ControlFlow::Exit;
+                                event_loop.exit();
+                            }
+                        }
+                        winit::event::WindowEvent::RedrawRequested => {
+                            let now = std::time::Instant::now();
+                            let dt = now - last_update;
+                            last_update = now;
+
+                            engine.update(&dt);
+                            match engine.render() {
+                                Ok(_) => {}
+                                Err(wgpu::SurfaceError::Lost) => {
+                                    engine.resize(engine.size);
+                                }
+                                Err(wgpu::SurfaceError::OutOfMemory) => {
+                                    event_loop.exit();
+                                }
+                                Err(e) => eprintln!("{:?}", e),
                             }
                         }
                         _ => (),
                     }
                 }
-                winit::event::Event::RedrawRequested(_) => {
-                    let now = std::time::Instant::now();
-                    let dt = now - last_update;
-                    last_update = now;
-
-                    engine.update(&dt);
-                    match engine.render() {
-                        Ok(_) => {}
-                        Err(wgpu::SurfaceError::Lost) => {
-                            engine.resize(engine.size);
-                        }
-                        Err(wgpu::SurfaceError::OutOfMemory) => {
-                            *control_flow = winit::event_loop::ControlFlow::Exit;
-                        }
-                        Err(e) => eprintln!("{:?}", e),
-                    }
-                }
-                winit::event::Event::MainEventsCleared => {
-                    window.request_redraw();
-                }
+                winit::event::Event::AboutToWait => window.request_redraw(),
                 _ => (),
-            },
-        );
+            });
+
+            if let winit::platform::pump_events::PumpStatus::Exit(_) = status {
+                break 'mainloop;
+            }
+        }
     }
 }
