@@ -2,7 +2,7 @@ use wgpu::util::DeviceExt;
 
 pub struct Engine {
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub surface: wgpu::Surface,
+    pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -43,7 +43,9 @@ impl Engine {
 
         let instance = wgpu::Instance::default();
 
-        let surface = unsafe { instance.create_surface(window) };
+        let surface = unsafe {
+            instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window).unwrap())
+        };
         let surface = surface.unwrap();
 
         let adapter = instance
@@ -59,8 +61,8 @@ impl Engine {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device Descriptor"),
-                    features: wgpu::Features::empty(),
-                    limits: wgpu::Limits::default(),
+                    required_features: wgpu::Features::empty(),
+                    required_limits: wgpu::Limits::default(),
                 },
                 None,
             )
@@ -76,7 +78,8 @@ impl Engine {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
-            view_formats: vec![wgpu::TextureFormat::Bgra8Unorm],
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
         };
 
         surface.configure(&device, &config);
